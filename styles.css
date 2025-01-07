@@ -47,8 +47,6 @@ body, html {
     white-space: nowrap;
     /* overflow: hidden; */
     display: inline-block;
-    word-wrap: break-word; /* 允许文字换行 */
-    word-break: break-all; /* 超出宽度时强制换行 */
     display: flex; /* 子元素水平排列 */
     flex-wrap: wrap; /* 自动换行 */
     justify-content: center; /* 保持内容水平居中 */
@@ -57,10 +55,6 @@ body, html {
 .hidden-text {
     visibility: hidden;
     white-space: nowrap;
-    left: 0;
-    top: 0;
-    word-wrap: break-word; /* 允许文字换行 */
-    word-break: break-all; /* 超出宽度时强制换行 */
     display: flex; /* 子元素水平排列 */
     flex-wrap: wrap; /* 自动换行 */
     justify-content: center; /* 保持内容水平居中 */
@@ -124,4 +118,5 @@ body, html {
     display: inline-block;
     opacity: 1;
     animation: bounceIn 0.6s ease-out forwards;
+    color: #66ccff;
 }

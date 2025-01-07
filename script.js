@@ -1,99 +1,44 @@
-// function showText(inputText) {
-//     textBox.innerHTML = ''; // 清空已有文字
-
-//     // 创建隐藏文字容器，用于测量宽度
-//     hiddenTextContainer = document.createElement('div');
-//     hiddenTextContainer.className = 'hidden-text';
-//     hiddenTextContainer.textContent = inputText;
-//     textBox.appendChild(hiddenTextContainer);
-
-//     // 创建可见文字容器，用于逐字显示
-//     visibleTextContainer = document.createElement('div');
-//     visibleTextContainer.className = 'visible-text';
-//     textBox.appendChild(visibleTextContainer);
-//     textBox.style.visibility = 'visible'; // 显示文字容器
-
-//     const totalWidth = hiddenTextContainer.offsetWidth;
-//     startTypingAnimation(inputText, totalWidth);
-// }
-
-// function startTypingAnimation(inputText, totalWidth) {
-//     const letters = Array.from(inputText);
-//     visibleTextContainer.style.width = '0px'; // 初始宽度为 0
-//     let currentWidth = 0;
-
-//     letters.forEach((letter, index) => {
-//         setTimeout(() => {
-//             // 添加新字符到可见容器
-//             const span = document.createElement('span');
-//             span.textContent = letter;
-//             visibleTextContainer.appendChild(span);
-//             hiddenTextContainer = document.getElementsByClassName('hidden-text');
-
-//             // 更新容器宽度
-//             console.log(hiddenTextContainer.children);
-//             currentWidth += hiddenTextContainer.children[index]?.offsetWidth || 0;
-//             console.log(currentWidth);
-//             visibleTextContainer.style.width = `${currentWidth}px`;
-
-//             // 添加弹跳效果
-//             span.style.animationDelay = `${index * 0.1}s`;
-//         }, index * 100);
-//     });
-
-//     // 全部显示完成后启动掉落动画
-//     // setTimeout(() => startFalling(inputText), letters.length * 100 + 1000);
-// }
-
-
-function startFalling() {
-    const letters = Array.from(textBox.children);
-    let fallenCount = 0;
-    for (let i = 0; i < letters.length; i++) {
-        const letter = letters[i];
-        const rect = letter.getBoundingClientRect(); // 获取文字的绝对位置
-
-        const paper = document.createElement('span');
-        paper.style.color = '#66CCFF';
-        paper.textContent = letter.textContent;
-        paper.classList.add('paper');
-
-        // 设置掉落文字的初始位置，与原文字位置一致
-        paper.style.left = `${rect.left}px`;
-        paper.style.top = `${rect.top}px`;
-        paper.style.width = `${rect.width}px`;
-        paper.style.height = `${rect.height}px`;
-        paper.style.lineHeight = `${rect.height}px`;
-        paper.style.animationDelay = `${Math.random() * 2}s`; // 随机掉落时间
-
-        // 监听动画结束事件
-        paper.addEventListener('animationend', () => {
-            paper.remove(); // 移除掉落的字母
-            fallenCount++;
-
-            // 所有文字都掉落后清空 text-box
-            if (text != undefined && text != null && fallenCount === text.length) {
-                textBox.innerHTML = ''; // 清空文字占用空间
-            }
-        });
-
-        document.body.appendChild(paper); // 将掉落文字添加到 body
-        letter.style.visibility = 'hidden'; // 隐藏原始文字
-    }
-}
-
 const textBox = document.getElementById('text-box');
 
 const TextAnimator = {
     hiddenTextContainer: null,
     visibleTextContainer: null,
+    animationQueue: [], // 消息队列
+    isAnimating: false, // 动画状态标志
+    audio: null, // 音效对象
+    printTime: 0,
+    timer: null,
 
-    init(textBox) {
+    init(textBox, audioSrc) {
         this.textBox = textBox;
+
+        // 初始化音效
+        if (audioSrc) {
+            this.audio = new Audio(audioSrc);
+        }
+    },
+
+    playSound() {
+        if (this.audio) {
+            this.audio.currentTime = 0; // 重置音效时间
+            this.audio.play().catch((error) => {
+                console.error('音效播放失败:', error);
+            });
+        }
     },
 
     showText(inputText) {
+        this.printTime = 0;
+        this.timer = setInterval(function() {
+            this.printTime++;
+        }, 1000);
+        if (this.isAnimating) {
+            // 如果正在动画中，将新消息加入队列
+            this.animationQueue.push(inputText);
+            return;
+        }
         this.textBox.innerHTML = '';
+        this.isAnimating = true; // 标记动画开始
 
         // 创建隐藏文字容器，用于测量宽度
         this.hiddenTextContainer = document.createElement('div');
@@ -128,6 +73,7 @@ const TextAnimator = {
         
         letters.forEach((letter, index) => {
             setTimeout(() => {
+                this.playSound();
                 // 添加新字符到可见容器
                 const span = document.createElement('span');
                 span.textContent = letter;
@@ -143,9 +89,9 @@ const TextAnimator = {
         });
 
         this.hiddenTextContainer.remove();
-    
+        clearInterval(this.timer);
         // 全部显示完成后启动掉落动画
-        setTimeout(() => this.startJumpAndFall(), inputText.length * 100 + 1000);
+        setTimeout(() => this.startJumpAndFall(), (inputText.length * 1000 * 0.15 - this.printTime) < 3000 ? 3000 : (inputText.length * 1000 * 0.15 - this.printTime));
     },
 
     startJumping() {
@@ -201,13 +147,21 @@ const TextAnimator = {
                 if (!this.visibleTextContainer.children.length) {
                     this.visibleTextContainer.remove();
                     this.visibleTextContainer = null;
+
+                    // 标记动画结束，并检查队列
+                    this.isAnimating = false;
+                    if (this.animationQueue.length > 0) {
+                        // 处理队列中的下一条消息
+                        const nextMessage = this.animationQueue.shift();
+                        this.showText(nextMessage);
+                    }
                 }
             });
         });
     },
 }
 
-TextAnimator.init(textBox);
+TextAnimator.init(textBox, "sounds/type.ogg");
 const wsUrl = "ws://localhost:4005/ws"; // 替换为你的 WebSocket 服务器地址
 
 let index = 0;
