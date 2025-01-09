@@ -60,7 +60,6 @@ const TextAnimator = {
 
         const totalWidth = this.hiddenTextContainer.offsetWidth;
         const hiddenRect = this.hiddenTextContainer.getBoundingClientRect();
-        console.log(hiddenRect);
         this.visibleTextContainer.style.left = hiddenRect.x;
         this.visibleTextContainer.style.top = hiddenRect.y;
         this.startTypingAnimation(inputText, totalWidth);
@@ -72,62 +71,68 @@ const TextAnimator = {
         // let currentWidth = 0;
         
         letters.forEach((letter, index) => {
-            setTimeout(() => {
-                this.playSound();
-                // 添加新字符到可见容器
-                const span = document.createElement('span');
-                span.textContent = letter;
-                this.visibleTextContainer.appendChild(span);
+            this.playSound();
+            // 添加新字符到可见容器
+            const span = document.createElement('span');
+            span.textContent = letter;
+            this.visibleTextContainer.appendChild(span);
+            span.style.animationDelay = `${index * 0.1}s`;
+            // setTimeout(() => {
+            //     this.playSound();
+            //     // 添加新字符到可见容器
+            //     const span = document.createElement('span');
+            //     span.textContent = letter;
+            //     this.visibleTextContainer.appendChild(span);
     
-                // 更新容器宽度
-                // currentWidth += this.hiddenTextContainer.children[index]?.offsetWidth || 0;
-                // this.visibleTextContainer.style.width = `${currentWidth}px`;
+            //     // 更新容器宽度
+            //     // currentWidth += this.hiddenTextContainer.children[index]?.offsetWidth || 0;
+            //     // this.visibleTextContainer.style.width = `${currentWidth}px`;
     
-                // 添加弹跳效果
-                // span.style.animationDelay = `${index * 0.1}s`;
-            }, index * 100);
+            //     // 添加弹跳效果
+            //     // span.style.animationDelay = `${index * 0.1}s`;
+            // }, index * 100);
         });
 
         this.hiddenTextContainer.remove();
         clearInterval(this.timer);
         // 全部显示完成后启动掉落动画
-        setTimeout(() => this.startJumpAndFall(), (inputText.length * 1000 * 0.15 - this.printTime) < 3000 ? 3000 : (inputText.length * 1000 * 0.15 - this.printTime));
+        setTimeout(() => this.startJumpAndFall(), (inputText.length * 1000 * 0.15 - this.printTime) < 5000 ? 5000 : (inputText.length * 1000 * 0.15 - this.printTime));
     },
 
-    startJumping() {
-        const letters = Array.from(this.visibleTextContainer.children);
+    // startJumping() {
+    //     const letters = Array.from(this.visibleTextContainer.children);
 
-        letters.forEach((letter, index) => {
-            // 添加跳跃动画
-            letter.style.animation = `jump 0.5s ease forwards`;
-            letter.style.animationDelay = `${index * 0.1}s`;
+    //     letters.forEach((letter, index) => {
+    //         // 添加跳跃动画
+    //         letter.style.animation = `jump 0.5s ease forwards`;
+    //         letter.style.animationDelay = `${index * 0.1}s`;
 
-            letter.addEventListener('animationend', (event) => {
-                if (event.animationName === 'jump') {
-                    // 跳跃完成后开始掉落动画
-                    this.startFalling();
-                }
-            });
-        });
-    },
+    //         letter.addEventListener('animationend', (event) => {
+    //             if (event.animationName === 'jump') {
+    //                 // 跳跃完成后开始掉落动画
+    //                 this.startFalling();
+    //             }
+    //         });
+    //     });
+    // },
 
-    startFalling() {
-        const letters = Array.from(this.visibleTextContainer.children);
-        let fallenCount = 0;
-        letters.forEach((letter, index) => {
-            // 添加掉落动画
-            letter.style.animation = `fall 2s forwards`;
-            letter.style.animationDelay = `${index * 0.1}s`;
+    // startFalling() {
+    //     const letters = Array.from(this.visibleTextContainer.children);
+    //     let fallenCount = 0;
+    //     letters.forEach((letter, index) => {
+    //         // 添加掉落动画
+    //         letter.style.animation = `fall 2s forwards`;
+    //         letter.style.animationDelay = `${index * 0.1}s`;
 
-            letter.addEventListener('animationend', () => {
-                fallenCount++;
-                if (fallenCount === letters.length) {
-                    // 清除内容
-                    this.textBox.innerHTML = '';
-                }
-            });
-        });
-    },
+    //         letter.addEventListener('animationend', () => {
+    //             fallenCount++;
+    //             if (fallenCount === letters.length) {
+    //                 // 清除内容
+    //                 this.textBox.innerHTML = '';
+    //             }
+    //         });
+    //     });
+    // },
 
     startJumpAndFall() {
         const letters = Array.from(this.visibleTextContainer.children);
@@ -139,12 +144,11 @@ const TextAnimator = {
             letter.style.animation = `jumpAndFall 1s ease forwards`;
             letter.style.animationDelay = `${index * 0.1}s`;
             
-
             // 在动画结束后移除元素
             letter.addEventListener('animationend', () => {
-                letter.remove();
+                // letter.remove();
                 // 检查是否是最后一个字母
-                if (!this.visibleTextContainer.children.length) {
+                if (index == this.visibleTextContainer.children.length - 1) {
                     this.visibleTextContainer.remove();
                     this.visibleTextContainer = null;
 
